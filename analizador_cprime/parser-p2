@@ -1,0 +1,468 @@
+include <stdio.h>
+#include <stdlib.h>
+#include "pl0.h"
+#include "auxiliares.h"
+#include "lexico.h"
+
+void obteneratributos();
+void obtenerconstructor();
+void obtenertipo();
+void obtenervar();
+void obtenerinstruccion();
+void obtenermetodos();
+void obtenercondicion();
+void obtenerelse();
+void obtenerwhile();
+void expnumerica();
+void expcaracter();
+void expcadena();
+void expbooleana();
+void obtenerswitch();
+void obtenerfor();
+void obtenerasing();
+void obtenermasexpresionnumerica();
+void obtenermasinstruccion();
+void obtenermasparametros();
+void obtenermastermino();
+
+
+void obteneratributos(){
+    obtenertipo();
+    obtenervar();
+    if(token == ident){
+        obtoken();
+        if(token == puntoycoma){      //corrdegir tok
+            obtoken();
+        }else error(1); //falta ;
+    }else error(2); //falta identificador
+}
+
+void obtenerconstructor(){
+    obtenertipo();
+    if(token == constructortok){
+        obtoken();
+        if(token == ident){
+            obtoken();
+            if(token == parena){
+                obtoken();
+                obtenervar();
+                if(token == ident){
+                    obtoken();
+                    while(token == coma){
+                        obtoken();
+                        obtenervar();
+                        if(token == ident){
+                            obtoken();
+                        }else error(2); //falta ident
+                    }if(token == parenc){
+                        obtoken();
+                        if(token == llavea){
+                            obtoken();
+                            obtenerinstruccion();
+                            if(token == llaveac){
+                                obtoken();
+                                if(token == ident){
+                                    obtoken();
+                                    if(token == igl ){
+                                        obtoken();
+                                        if(token == ident){
+                                            obtoken();
+                                            while(token == puntoycoma){
+                                                obtoken();
+                                                if(token == ident){
+                                                    obtoken();
+                                                    if(token == igl){
+                                                        if(token == ident){
+                                                            obtoken();
+                                                        }
+                                                    }else error(3); //falta igual
+                                                }else error(2); // falta identificador
+                                            }if(token == llaveac){
+                                                obtoken();
+                                            }else error(4); //falta llave cerrada
+                                        }else error(2); //falta ident
+                                    } else error(3); //falta igual
+                                }else error(2); //falta identificador
+                            }else error(4); //falta llave cierre
+                        } else error(4); //fata llave abierta
+                    }else error(5); //falta parentesis ceerrado
+                }else error(2); //falta identificador
+            }else error(5); //falta parentesis abierto
+        }else error(2); //falta identiricador
+    }else error(); //falta constructor tok
+}
+
+void obtenermetodos(){
+    obtenertipo();
+    obtenervar();
+    if(token == ident){
+        obtoken();
+        if(token == parena){
+            obtoken();
+            obtenervar();
+            if(token == ident){
+                obtoken();
+                while(token == coma){
+                    obtoken();
+                    obtenervar();
+                    if(token == ident){
+                        obtoken();
+                    }else error(2); //falta ident
+                }if(token == parenc){
+                    obtoken();
+                    if(token == llavea){
+                        obtoken();
+                        obtenerinstruccion();
+                        if(token == llaveac){
+                            obtoken();
+                        }else error(4); //falta llave cerrada
+                    }else error(4); //
+                }else error(5);
+            }else error(2);
+        }else error(5);
+    }else error(2);
+}
+
+void obtenerobjeto(){               //REVISAR BIEN
+    if(token == classtok){
+        obtoken();
+        if(token == ident){
+            obtoken();
+            if(token == igl){
+                if(token == newtok){
+                    
+                }else error(7);
+            }else error(3);
+        }else error(2);
+    }else error(8);
+}
+
+void obtenerif(){
+    if(token == iftok){
+        obtoken();
+        if(token == parena){
+            obtoken();
+            obtenercondicion();
+            if(token == parenc){
+                obtoken();
+                if(token == llavea){
+                    obtoken();
+                    obtenerinstruccion();
+                    while(token != llaveac){
+                        obtoken();
+                        obtenerinstruccion();
+                    }if(token != nulo){                 //no seguro
+                        obtoken();
+                        obtenerelse();
+                    }
+                }else error(4);
+            }else error(5);
+        }else error(5);
+    }else error(9);
+}
+
+void obtenerelse(){
+    if(token == elsetok){
+        obtoken();
+        if(token == llavea){
+            obtoken();
+            obtenerinstruccion();
+            while(token != llaveac){
+                obtoken();
+                obtenerinstruccion();
+            }if(token == llaveac){
+                obtoken();
+            }else error(4);       //falto llave
+        }else error(4);
+    }else error(10);
+}
+
+void obtenerwhile(){
+    if(token == whiletok){
+        obtoken();
+        if(token == parena){
+            obtoken();
+            obtenercondicion();
+            if(token == parenc){
+                obtoken();
+                if(token == llavea){
+                    obtoken();
+                    obtenerinstruccion();
+                    while(token != llaveac){
+                        obtoken();
+                        obtenerinstruccion();
+                    }if(token == llaveac){
+                        obtoken();
+                    }else error(4);       //falto llave
+                }else error(4);
+            }else error(5);
+        }else error(5);
+    }else error(11);
+}
+
+
+void obtenerexpresion(){
+    expnumerica();
+    expcaracter();
+    expcadena();
+    expbooleana();
+}
+
+void obtenerexpnumerica(){
+    obtenertermino();
+    if(token == mas || token == menos){
+        obtoken();
+        obtenermasexpresionnumerica();
+    }else error(12);
+}
+
+void obtenermasexpresionnumerica(){
+    obtenerexpnumerica();
+}
+
+void obtenertermino(){
+    obtenerfactor();
+    if(token == por || token == div){
+        obtoken();
+        obtenermastermino();
+    }else error(13);
+}
+
+void obtenermastermino(){
+    obtenertermino();
+}
+
+void obtenerfactor(){        //arerglar
+    if(token == ident){
+        obtoken();
+    }else error(2);
+    
+    if(token == numero){
+        obtoken();
+    }else obtenerexpnumerica();
+}
+
+void obtenerexpcaracter(){
+    if(token == ident){
+        obtoken();
+    }else error(2);
+}
+
+void obtenerllamarmetodo(){
+    if(token == asi){
+        if(token == ident){
+            if(token ==parena){
+                while(token!= parenc){
+                    obtenerparametros();
+                }if(token == parenc){
+                    obtoken();
+                }else error(5);
+            }else error(4);
+        }
+    }
+}
+
+
+void programa(){
+//    int temp; // Para guardar el valor de it (se?alador de la TDS) temporalmente.
+    if(token == starttok){      
+        obtoken();
+        declaracionclase();  
+        if(token == endtok){
+            obtoken();
+            while(declaracionclase()){
+                //plantear la recursion
+            }
+        }else error(16); //no se enc endtoken
+    }else error(15); //no se encontro startoken
+    
+}
+
+void declaracionclase(){
+    if(token == publictok){
+        obtoken(); 
+        if(token == classtok){
+            obtoken();  
+            if(token == ident){
+                obtoken();
+                if(token == llavea){
+                    obtoken();
+                    obtenerinstruccion();
+                    if(token == llaveac){
+                        obtoken();
+                    }else error(5); //no se encontro llave cerrada
+                }else error(5);//no se encontro llave abierto      
+            }else error(2); //no se encontro el iden
+        }else error(8); //no se encontro la palabra class
+    }else error(17); //no se encontro la palabra public
+}
+
+void obtenerinstruccion(){
+    obtenermasinstruccion();
+    obtenerinstruccion();
+    //recordar como poner el vacio
+}
+
+void obtenermasinstruccion(){
+    obteneratributos();
+    obtenerconstructor();
+    obtenermetodos();
+    obtenerobjeto();
+    obtenerif();
+    obtenerwhile();
+    obtenerfor();
+    obtenerswitch();
+    obtenerasing();
+    obtenerexecute();
+ //   obtenerprint();
+ //   obtenerread();
+    obtenerexpresion();
+
+}
+
+void obtenerasing(){
+    if(token == ident){
+        obtoken();
+        if(token == igl){
+            obtoken();
+            obtenerexpresion();
+        }else error(3);//no se encontro un signo =
+    }else error(2);//no se encontro un identificador    
+}
+
+void obtenerexecute(){
+    if(token == exctok){
+        obtoken();
+        if(token = ident){
+            obtoken();
+            if(token == parena){
+                obtoken();
+                obtenerparametros();
+                if(token = parenc){
+                    obtoken();
+                }else error(5);//falta parentesis cerrado
+            }else error(5);//no se encontro parentesis abierto
+        }else error(2);//no se encontro un identificador
+    }else error(18); // no se encontro asignacion   
+}
+
+void obtenerparametros(){
+    if(token == nulo){
+        exit(0);
+    }
+    else{
+        if(token == ident){
+            obtoken();
+            if(token == coma){
+                obtenermasparametros();
+            }else error(1);
+        }else error(2);//no se encontro un ident
+        
+    }
+}
+
+void obtenermasparametros(){
+    obtenerparametros();
+}
+
+void obtenerfor(){    
+    if(token == fortok){
+        obtoken();
+        if(token == parena){
+            obtoken();
+            if(token == ident){
+                obtoken();
+                if(token == igl){
+                    obtoken();
+                    if(token == numero){
+                        obtoken();
+                        if(token == puntoycoma){
+                            obtoken();
+                            if(token == ident){
+                                obtoken();
+                                if(token == mei | token == mai){
+                                    obtoken();
+                                    if(token == numero){
+                                        obtoken();
+                                        if(token == puntoycoma){
+                                            obtoken();
+                                            if(token == ident){
+                                                obtoken();
+                                                if(token == steptok){
+                                                   obtoken();
+                                                    if(token == parenc){
+                                                        obtoken();
+                                                        if(token == llavea){
+                                                            obtoken();
+                                                            obtenerinstruccion();
+                                                            //no se si obtener el token
+                                                            if(token == llaveac){
+                                                                obtoken();
+                                                            }else error(4); //no se encontro el cierre de llaves
+                                                        }else error(4); //no se encontro llave abierta
+                                                    }else error(5); //no se encontro parentesis cerrado
+                                                }else error(19); //no se encontro step aumento o disminucion
+                                            }else error(2); //no se encontro un identificador
+                                        }else error(1); // no se encontro punto y coma
+                                    }else error(20); //no se encontro un numero
+                                }else error(21); //no se encontro un < o >
+                            }else error(2); //no se encontro un identificador
+                        }else error(1); //no se encontro un punto y coma
+                    }else error(20); //no se encontro un numero
+                }else error(3); //no se encontro un igual
+            }else error(2); //no ae encontro un identificador 
+        }else error(5); //no se encontro parentesis abierto
+    }else error(22); //no se encontro un for
+}    
+    
+
+void obtenerswitch(){    
+    if(token == switchtok){
+        obtoken();
+        if(token == parena){
+            obtoken();       
+            if(token == numero){
+                obtoken();
+                if(token == parenc){
+                    obtoken();
+                    if(token == llavea){
+                        obtoken();
+                        
+                        while(token != defaulttok){
+                            if(token == casetok){
+                                obtoken();
+                                if(token == numero){
+                                    obtoken(); //ver si llevara :
+                                    obtenerinstruccion();
+                                    if(token == breaktok){
+                                        obtoken();
+                                        if(token == puntoycoma){
+                                            obtoken();                      
+                                            if(token == llaveac){
+                                                obtoken();
+                                            }else error(4);//no se encontro llave cerrada;
+                                        }else error(1);//no se encontro ;
+                                    }else error(25);//no se encontro break;
+                                }else error(20);//no se encontraron un numero
+                            }else error(26);//no se encontro case
+                        }
+                    
+                        if(token == defaulttok){
+                            obtoken();
+                            obtenerinstruccion();
+                            if(token == breaktok){
+                                obtoken();
+                                if(token == puntoycoma){
+                                    obtoken();
+                                    if(token == llaveac){
+                                        obtoken();
+                                    }else error(5);//no se encontro llave cerrada;
+                                }else error(1);//no se encontro ;;
+                            }else error(25);//no se encontro break;
+                        }else error(27);//no se encontro llamarinstruccion();
+                    }else error(4);//no se encontro llave abierta
+                }else error(5);//no se encontro un parentesis cerrado
+            }else error(20);//no se encontro un parentesis cerrado
+        }else error(5); //no se encontro un numero
+    }else error(28);//no encontro un parentesis abierto 
+} 
